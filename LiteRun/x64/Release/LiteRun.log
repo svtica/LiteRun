@@ -1,0 +1,46 @@
+﻿  stdafx.cpp
+  CmdLineParser.cpp
+  ConsoleRedir.cpp
+  Encryption.cpp
+C:\Users\dricard\Dev\sttr\LiteRun\Encryption.cpp(8,42): warning C4267: '=' : conversion de 'size_t' en 'DWORD', perte possible de données
+  (compiler le fichier source '/Encryption.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\Encryption.cpp(24,35): warning C4267: '=' : conversion de 'size_t' en 'DWORD', perte possible de données
+  (compiler le fichier source '/Encryption.cpp')
+  
+  InteractiveSession.cpp
+  LiteRun.cpp
+  Parsing.cpp
+C:\Users\dricard\Dev\sttr\LiteRun\Parsing.cpp(77,51): warning C4244: 'argument' : conversion de '__int64' en 'int', perte possible de données
+  (compiler le fichier source '/Parsing.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\Parsing.cpp(111,49): warning C4244: 'argument' : conversion de '__int64' en 'int', perte possible de données
+  (compiler le fichier source '/Parsing.cpp')
+  
+  Process.cpp
+  Remote.cpp
+C:\Users\dricard\Dev\sttr\LiteRun\Remote.cpp(994,61): warning C4267: '=' : conversion de 'size_t' en 'DWORD', perte possible de données
+  (compiler le fichier source '/Remote.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\Remote.cpp(1032,17): warning C4244: 'initialisation' : conversion de '__int64' en 'DWORD', perte possible de données
+  (compiler le fichier source '/Remote.cpp')
+  
+  ServiceImpl.cpp
+  UtilityFuncs.cpp
+C:\Users\dricard\Dev\sttr\LiteRun\UtilityFuncs.cpp(80,37): warning C4267: 'argument' : conversion de 'size_t' en 'DWORD', perte possible de données
+  (compiler le fichier source '/UtilityFuncs.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\UtilityFuncs.cpp(98,57): warning C4267: 'argument' : conversion de 'size_t' en 'int', perte possible de données
+  (compiler le fichier source '/UtilityFuncs.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\UtilityFuncs.cpp(102,46): warning C4267: 'argument' : conversion de 'size_t' en 'int', perte possible de données
+  (compiler le fichier source '/UtilityFuncs.cpp')
+  
+C:\Users\dricard\Dev\sttr\LiteRun\UtilityFuncs.cpp(130,33): warning C4267: 'argument' : conversion de 'size_t' en 'int', perte possible de données
+  (compiler le fichier source '/UtilityFuncs.cpp')
+  
+  Génération de code en cours
+  Previous IPDB not found, fall back to full compilation.
+  All 857 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Fin de la génération du code
+  LiteRun.vcxproj -> C:\Users\dricard\Dev\sttr\LiteRun\x64\Release\LiteRun.exe
