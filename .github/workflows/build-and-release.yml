@@ -1,0 +1,148 @@
+# .github/workflows/build-and-release.yml
+# GitHub Actions workflow for LiteRun (C++ Native)
+
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x64, x86]
+        configuration: [Release, Debug]
+        exclude:
+          - configuration: Debug
+            
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Visual Studio
+      uses: microsoft/setup-msbuild@v1.3
+      
+    - name: Setup Windows SDK
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
+      with:
+        sdk-version: 20348
+        
+    - name: Build solution
+      run: |
+        # Adjust these paths based on your actual solution/project files
+        $solutionFile = Get-ChildItem -Name "*.sln" -ErrorAction SilentlyContinue | Select-Object -First 1
+        $projectFile = Get-ChildItem -Name "*.vcxproj" -ErrorAction SilentlyContinue | Select-Object -First 1
+        
+        if ($solutionFile) {
+          msbuild $solutionFile /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
+        } elseif ($projectFile) {
+          msbuild $projectFile /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
+        } else {
+          Write-Error "No solution or project file found"
+          exit 1
+        }
+      shell: powershell
+      
+    - name: Copy build outputs
+      run: |
+        $platform = "${{ matrix.platform }}"
+        $config = "${{ matrix.configuration }}"
+        $buildPath = "$platform\$config"
+        $publishPath = "publish\$platform"
+        
+        # Create publish directory
+        New-Item -ItemType Directory -Force -Path $publishPath
+        
+        # Copy executables and libraries
+        if (Test-Path $buildPath) {
+          Copy-Item "$buildPath\*.exe" -Destination $publishPath -ErrorAction SilentlyContinue
+          Copy-Item "$buildPath\*.dll" -Destination $publishPath -ErrorAction SilentlyContinue
+          Copy-Item "$buildPath\*.pdb" -Destination $publishPath -ErrorAction SilentlyContinue
+        }
+        
+        # Copy documentation
+        Copy-Item "README.md" -Destination $publishPath -ErrorAction SilentlyContinue
+        Copy-Item "LICENSE" -Destination $publishPath -ErrorAction SilentlyContinue
+        
+        # Copy any configuration files
+        Get-ChildItem -Name "*.config" -ErrorAction SilentlyContinue | ForEach-Object {
+          Copy-Item $_ -Destination $publishPath
+        }
+      shell: powershell
+      
+    - name: Create release package
+      run: |
+        $version = "1.0.0"
+        $platform = "${{ matrix.platform }}"
+        $projectName = Split-Path (Get-Location) -Leaf
+        
+        if ($env:GITHUB_REF -like "refs/tags/*") {
+          $version = $env:GITHUB_REF -replace "refs/tags/v", ""
+        } elseif ($env:GITHUB_REF -like "refs/heads/*") {
+          $branch = $env:GITHUB_REF -replace "refs/heads/", ""
+          $sha = $env:GITHUB_SHA.Substring(0,7)
+          $version = "1.0.0-$branch-$sha"
+        }
+        
+        $packageName = "LiteRun-$version-win-$platform.zip"
+        Compress-Archive -Path "publish\$platform\*" -DestinationPath $packageName
+        
+        echo "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
+        echo "PACKAGE_NAME=$packageName" >> $env:GITHUB_ENV
+        echo "PROJECT_NAME=LiteRun" >> $env:GITHUB_ENV
+      shell: powershell
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: LiteRun-${{ env.PACKAGE_VERSION }}-${{ matrix.platform }}
+        path: ${{ env.PACKAGE_NAME }}
+        
+    - name: Upload to release (if tag)
+      if: startsWith(github.ref, 'refs/tags/') && matrix.configuration == 'Release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ env.PACKAGE_NAME }}
+        asset_name: ${{ env.PACKAGE_NAME }}
+        asset_content_type: application/zip
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/init@v2
+      with:
+        languages: 'cpp'
+        
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+      
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc')
