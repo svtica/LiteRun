@@ -16,10 +16,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        platform: [x64, x86]
-        configuration: [Release, Debug]
-        exclude:
-          - configuration: Debug
+        platform: [x64]
+        configuration: [Release]
             
     steps:
     - name: Checkout code
@@ -54,7 +52,7 @@ jobs:
         $platform = "${{ matrix.platform }}"
         $config = "${{ matrix.configuration }}"
         $buildPath = "$platform\$config"
-        $publishPath = "publish\$platform"
+        $publishPath = "publish"
         
         # Create publish directory
         New-Item -ItemType Directory -Force -Path $publishPath
@@ -91,7 +89,7 @@ jobs:
         }
         
         $packageName = "LiteRun-$version-win-$platform.zip"
-        Compress-Archive -Path "publish\$platform\*" -DestinationPath $packageName
+        Compress-Archive -Path "publish\*" -DestinationPath $packageName
         
         echo "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
         echo "PACKAGE_NAME=$packageName" >> $env:GITHUB_ENV
@@ -105,7 +103,7 @@ jobs:
         path: ${{ env.PACKAGE_NAME }}
         
     - name: Upload to release (if tag)
-      if: startsWith(github.ref, 'refs/tags/') && matrix.configuration == 'Release'
+      if: startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
